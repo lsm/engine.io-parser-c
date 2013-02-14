@@ -37,6 +37,16 @@ static const char *eio_packet_types = "0123456";
 
 
 char *eio_encode_packet(char *encoded, const eio_packet_t *packet) {
+/* Encodes a single packet into string.
+ *
+ *  <packet type id>[<data>]
+ *
+ * Example:
+ *  
+ *  0
+ *  2ping
+ *  4Hello world
+ */
     int t = packet->type;
     char *p = encoded;
     
@@ -54,6 +64,10 @@ char *eio_encode_packet(char *encoded, const eio_packet_t *packet) {
 }
 
 eio_packet_t *eio_decode_packet(eio_packet_t *packet, const char *encoded) {
+/* Decodes an encoded string to packet.
+ *
+ * Returns NULL pointer for invalid format.
+ */
     char type;
     const char *c = strchr(eio_packet_types, encoded[0]);
     
@@ -74,6 +88,15 @@ eio_packet_t *eio_decode_packet(eio_packet_t *packet, const char *encoded) {
 }
 
 char *eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_packets) {
+/* Encodes multiple packets (payload) into string.
+ * This is for transport which doesn't have framing support.
+ *
+ *     <length>:data
+ *
+ * Example:
+ *
+ *     12:4hello world5:2ping
+ */
     if (num_packets == 0) {
         return strcpy(encoded, "0:");
     }
@@ -96,6 +119,10 @@ char *eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_pac
 }
 
 eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *encoded) {
+/* Decodes data when a payload is maybe expected.
+ *
+ * Returns NULL pointer for invalid format.
+ */
     eio_packet_t *p = packets;
     size_t len = strlen(encoded);
     
