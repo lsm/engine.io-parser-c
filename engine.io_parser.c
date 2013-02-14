@@ -35,8 +35,6 @@
 
 static const char *eio_packet_types = "0123456";
 
-
-char *eio_encode_packet(char *encoded, const eio_packet_t *packet) {
 /* Encodes a single packet into string.
  *
  *  <packet type id>[<data>]
@@ -47,12 +45,15 @@ char *eio_encode_packet(char *encoded, const eio_packet_t *packet) {
  *  2ping
  *  4Hello world
  */
+char *
+eio_encode_packet(char *encoded, const eio_packet_t *packet)
+{
     int t = packet->type;
     char *p = encoded;
+    char type;
     
     if (t >= EIO_OPEN && t <= EIO_NOOP) {
-        // type char
-        char type = eio_packet_types[t];
+        type = eio_packet_types[t];
         *p++ = type;
         
         if (strlen(packet->data) > 0) {
@@ -63,11 +64,13 @@ char *eio_encode_packet(char *encoded, const eio_packet_t *packet) {
     return encoded;
 }
 
-eio_packet_t *eio_decode_packet(eio_packet_t *packet, const char *encoded) {
 /* Decodes an encoded string to packet.
  *
  * Returns NULL pointer for invalid format.
  */
+eio_packet_t *
+eio_decode_packet(eio_packet_t *packet, const char *encoded)
+{
     char type;
     const char *c = strchr(eio_packet_types, encoded[0]);
     
@@ -87,7 +90,6 @@ eio_packet_t *eio_decode_packet(eio_packet_t *packet, const char *encoded) {
     return packet;
 }
 
-char *eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_packets) {
 /* Encodes multiple packets (payload) into string.
  * This is for transport which doesn't have framing support.
  *
@@ -97,18 +99,21 @@ char *eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_pac
  *
  *     12:4hello world5:2ping
  */
+char *
+eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_packets)
+{
     if (num_packets == 0) {
         return strcpy(encoded, "0:");
     }
     
+    int i;
+    size_t len;
     char length[EIO_LENGTH_SIZE + 1];
     
-    for (int i = 0; i < num_packets; i++) {
-        size_t len = strlen(packets[i].data);
-        // 1 character for type and 1 for null-terminater
+    for (i = 0; i < num_packets; i++) {
+        len = strlen(packets[i].data);
         char packet_str[len + 2];
         eio_encode_packet(packet_str, packets + i);
-        // <length>:data
         sprintf(length, "%lu", strlen(packet_str));
         strcat(encoded, length);
         strcat(encoded, ":");
@@ -118,11 +123,13 @@ char *eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_pac
     return encoded;
 }
 
-eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *encoded) {
 /* Decodes data when a payload is maybe expected.
  *
  * Returns NULL pointer for invalid format.
  */
+eio_packet_t *
+eio_decode_payload(eio_packet_t *packets, const char *encoded)
+{
     eio_packet_t *p = packets;
     size_t len = strlen(encoded);
     
@@ -133,9 +140,10 @@ eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *encoded) {
     int n;
     char length[EIO_LENGTH_SIZE + 1];
     char nc[EIO_LENGTH_SIZE + 1];
+    char c;
     
     for (int i = 0; i < len; i++) {
-        char c = encoded[i];
+        c = encoded[i];
         
         if (':' != c) {
             sprintf(length, "%s%c", length, c);
@@ -147,8 +155,10 @@ eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *encoded) {
                 return NULL;
             }
             
-            // slice packet data from string
             char *msg = malloc(n + 1);
+            if (msg == NULL) {
+                return NULL;
+            }
             strncpy(msg, encoded + i + 1, n);
             msg[n] = '\0';
             
@@ -157,20 +167,20 @@ eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *encoded) {
             }
             
             if (strlen(msg) > 0) {
-                if (eio_decode_packet(p++, msg) == NULL) {
+                eio_packet_t *packet = eio_decode_packet(p++, msg);
+                if (packet == NULL) {
                     return NULL;
                 }
             }
             
             i += n;
-            length[0] = 0;
+            length[0] = '\0';
         }
     }
     
-    if (length[0] != 0) {
+    if (length[0] != '\0') {
         return NULL;
     }
     
     return packets;
 }
-

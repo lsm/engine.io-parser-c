@@ -1,5 +1,3 @@
-#ifndef engine_io_parser_h
-#define engine_io_parser_h
 /*
  * engine.io_parser.h
  * C implementation of Engine.IO protocol
@@ -27,15 +25,12 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#ifndef _ENGINE_IO_PARSER_H_
+#define _ENGINE_IO_PARSER_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define SIZE(x) (sizeof(x) / sizeof(x[0]))
-
-/**
- * Packet types.
- */
 enum {
     EIO_OPEN = 0,
     EIO_CLOSE = 1,
@@ -54,11 +49,15 @@ struct _eio_packet_t {
 };
 
 
-char *eio_encode_packet(char *encoded, const eio_packet_t *packet);
-eio_packet_t *eio_decode_packet(eio_packet_t *packet, const char *encoded);
+char *
+eio_encode_packet(char *encoded, const eio_packet_t *packet);
+eio_packet_t *
+eio_decode_packet(eio_packet_t *packet, const char *encoded);
 
-char *eio_encode_payload(char *payload, const eio_packet_t *packets, int num_packets);
-eio_packet_t *eio_decode_payload(eio_packet_t *packets, const char *payload);
+char *
+eio_encode_payload(char *payload, const eio_packet_t *packets, int num_packets);
+eio_packet_t *
+eio_decode_payload(eio_packet_t *packets, const char *payload);
 
 #ifdef __cplusplus
 }
