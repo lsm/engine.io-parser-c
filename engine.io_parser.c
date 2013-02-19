@@ -48,7 +48,7 @@ static const char *eio_packet_types = "0123456";
 char *
 eio_encode_packet(char *encoded, const eio_packet_t *packet)
 {
-    int t = packet->type;
+    uint8_t t = packet->type;
     char *p = encoded;
     char type;
     
@@ -71,7 +71,7 @@ eio_encode_packet(char *encoded, const eio_packet_t *packet)
 eio_packet_t *
 eio_decode_packet(eio_packet_t *packet, const char *encoded)
 {
-    char type;
+    uint8_t type;
     const char *c = strchr(eio_packet_types, encoded[0]);
     
     if (c != NULL) {
@@ -81,7 +81,7 @@ eio_decode_packet(eio_packet_t *packet, const char *encoded)
         return packet;
     }
     
-    packet->type = type;
+    packet->type = (uint8_t) type;
     
     if (strlen(encoded) > 1) {
         packet->data = encoded + 1;
@@ -100,13 +100,13 @@ eio_decode_packet(eio_packet_t *packet, const char *encoded)
  *     12:4hello world5:2ping
  */
 char *
-eio_encode_payload(char *encoded, const eio_packet_t *packets, int num_packets)
+eio_encode_payload(char *encoded, const eio_packet_t *packets, uint32_t num_packets)
 {
     if (num_packets == 0) {
         return strcpy(encoded, "0:");
     }
     
-    int i;
+    uint32_t i;
     size_t len;
     char length[EIO_LENGTH_SIZE + 1];
     
@@ -137,18 +137,18 @@ eio_decode_payload(eio_packet_t *packets, const char *encoded)
         return NULL;
     }
     
-    int n;
+    uint32_t n;
     char length[EIO_LENGTH_SIZE + 1];
     char nc[EIO_LENGTH_SIZE + 1];
     char c;
     
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         c = encoded[i];
         
         if (':' != c) {
             sprintf(length, "%s%c", length, c);
         } else {
-            n = (int) strtol(length, NULL, 10);
+            n = (uint32_t) strtol(length, NULL, 10);
             sprintf(nc, "%d", n);
             
             if (0 == length[0] || strcmp(length, nc) != 0) {

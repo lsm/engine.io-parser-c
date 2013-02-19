@@ -31,6 +31,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 enum {
     EIO_OPEN = 0,
     EIO_CLOSE = 1,
@@ -44,7 +46,7 @@ enum {
 typedef struct _eio_packet_t eio_packet_t;
 
 struct _eio_packet_t {
-    int type;
+    uint8_t type;
     const char *data;
 };
 
@@ -55,7 +57,7 @@ eio_packet_t *
 eio_decode_packet(eio_packet_t *packet, const char *encoded);
 
 char *
-eio_encode_payload(char *payload, const eio_packet_t *packets, int num_packets);
+eio_encode_payload(char *payload, const eio_packet_t *packets, uint32_t num_packets);
 eio_packet_t *
 eio_decode_payload(eio_packet_t *packets, const char *payload);
 
